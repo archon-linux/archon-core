@@ -1,0 +1,36 @@
+# Maintainer: Nek <@nekwebdev>
+
+pkgname=calamares-config
+pkgver=1.0
+pkgrel=1
+pkgdesc="Calamares configuration for Archon Linux."
+url="https://github.com/archon-linux/archon-core"
+arch=('any')
+license=('GPL')
+provides=($pkgname)
+conflicts=($pkgname)
+depends=()
+
+prepare() {
+	cp -af ../files/. ${srcdir}
+}
+
+package() {
+	local _bindir=${pkgdir}/usr/bin
+	mkdir -p "$_bindir"
+
+	# copy all files recursively in /etc/calamares
+	(find calamares -type f -exec install -Dm 644 "{}" "$pkgdir/etc/{}" \;)
+
+	# copy install scripts
+	install -Dm 755 post_install.sh				"$_bindir"/post_install.sh
+	install -Dm 755 chrooted_post_install.sh	"$_bindir"/chrooted_post_install.sh
+}
+
+
+
+
+
+
+
+
