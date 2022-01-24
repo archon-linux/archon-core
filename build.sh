@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
+# archon-core
+# https://github.com/archon-linux/archon-core
+# @nekwebdev
+# LICENSE: GPLv3
+# original: Copyright (C) 2020-2021 Aditya Shakya <adi1090x@gmail.com>
 
-## Copyright (C) 2020-2021 Aditya Shakya <adi1090x@gmail.com>
-## Everyone is permitted to copy and distribute copies of this file under GNU-GPL3
-
-## Dirs
+cd "$(dirname "$0")" || exit 1
 DIR="$(pwd)"
 PKGS=(`ls -d */ | cut -f1 -d'/'`)
 PKGDIR="$DIR/packages"
@@ -33,29 +35,7 @@ build_pkgs () {
 	echo -e "\nBuilding Packages - \n"
 	for pkg in "${PKGS[@]}"; do
 		echo -e "Building ${pkg}..."
-		cd "$pkg" && updpkgsums && makepkg -s && mv ./*.pkg.tar.zst "$PKGDIR"
-
-		if [[ "$pkg" == 'calamares' ]]; then
-			rm -rf src pkg calamares-*
-		elif [[ "$pkg" == 'grub' ]]; then
-			rm -rf src pkg gnulib grub grub-extras unifont-*
-		elif [[ "$pkg" == 'plymouth' ]]; then
-			rm -rf src pkg ./*.tar.gz
-		else
-			rm -rf src pkg
-		fi
-
-		# Verify
-		while true; do
-			set -- "$PKGDIR"/"$pkg"-*
-			if [[ -e "$1" ]]; then
-				echo -e "\nPackage '${pkg}' generated successfully.\n"
-				break
-			else
-				echo -e "\nFailed to build '${pkg}', Exiting...\n"
-				exit 1;
-			fi
-		done
+		cd "$pkg" && ./build.sh
 		cd "$DIR" || exit 1
 	done
 

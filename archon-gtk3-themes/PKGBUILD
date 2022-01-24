@@ -1,0 +1,25 @@
+# Maintainer: Nek <@nekwebdev>
+
+pkgname=archon-gtk3-themes
+pkgver=1.0
+pkgrel=1
+pkgdesc='Archon Linux GTK3 themes and icons files'
+url="https://github.com/archon-linux/archon-themes"
+arch=('any')
+license=('GPL3')
+depends=()
+
+prepare() {
+	cp -af ../files/. "$srcdir"
+}
+
+package() {	
+	local _etcdir=${pkgdir}/etc
+
+	mkdir -p "$_etcdir"
+
+	cp -r "${srcdir}/skel" "${_etcdir}/skel"
+	
+	chmod +x "${_etcdir}/skel/.local/share/icons/flattrcolor/scripts/"*.sh
+	chmod +x "${_etcdir}/skel/.cache/wal/"*.sh
+}

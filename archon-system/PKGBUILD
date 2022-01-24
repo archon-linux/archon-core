@@ -1,0 +1,72 @@
+# Maintainer: Nek <@nekwebdev>
+
+pkgname=archon-system
+pkgver=1.0
+pkgrel=1
+pkgdesc='Archon Linux system related configuration files'
+url="https://github.com/archon-linux/archon-core"
+arch=('any')
+license=('GPL3')
+depends=()
+
+prepare() {
+	cp -af ../files/. "$srcdir"
+}
+
+package() {	
+	local _etcdir="${pkgdir}/etc"
+	local _sysddir="${pkgdir}/usr/lib/systemd"
+	local _bindir="${pkgdir}/usr/bin"
+	local _systemddir="${pkgdir}/etc/systemd/system"
+	local _targetdir="${pkgdir}/etc/systemd/system/multi-user.target.wants"
+	local _hooksdir="${pkgdir}/usr/share/libalpm"
+
+	mkdir -p "$_etcdir"/pacman.d
+	mkdir -p "$_etcdir"/default
+	mkdir -p "$_sysddir"
+	mkdir -p "$_bindir"
+	mkdir -p "$_systemddir"
+	mkdir -p "$_targetdir"
+	mkdir -p "$_hooksdir"
+
+	# copy all calamares config files recursively in /etc/calamares
+	(find calamares -type f -exec install -Dm 644 "{}" "${pkgdir}/etc/{}" \;)
+
+	# copy grub config
+	cp -r "${srcdir}/grub" "${_etcdir}/default/grub.archon"
+
+	# copy pacman and pamac config.
+	cp -r "${srcdir}/pacman.conf" "${_etcdir}/pacman.conf.archon"
+	cp -r "${srcdir}/pamac.conf" "${_etcdir}/pamac.conf.archon"
+
+	# copy lightdm and lightdm sleek greeter configs
+	cp -r "${srcdir}/lightdm" "${_etcdir}/lightdm"
+	mv "${_etcdir}/lightdm/lightdm.conf" "${_etcdir}/lightdm/lightdm.conf.archon"
+
+	# copy paccache service
+	cp -r "${srcdir}/system" "${_sysddir}/system"
+
+	# copy the archon mirrorlist
+	cp -r "${srcdir}/archon-mirrorlist" "${_etcdir}/pacman.d/archon-mirrorlist"
+
+	# copy the before_login service and script
+	cp -r "${srcdir}/before_login/before_login.sh" "${_bindir}/before_login.sh"
+	cp -r "${srcdir}/before_login/before_login.service" "${_systemddir}/before_login.service"
+	
+	# enable the before_login service
+	ln -sr "${_systemddir}/before_login.service" "${_targetdir}/before_login.service"
+
+	# copy the post_install scripts
+	cp -r "${srcdir}/post_install/post_install.sh" "${_bindir}/post_install.sh"
+	cp -r "${srcdir}/post_install/chrooted_post_install.sh" "${_bindir}/chrooted_post_install.sh"
+
+	# copy pacman hooks
+	cp -r "${srcdir}/hooks" "${_hooksdir}/hooks"
+	mv "${_hooksdir}/hooks/archon-hooks-runner" "${_bindir}/archon-hooks-runner"
+	
+	# make the scripts excecutable
+	chmod +x "${_bindir}/before_login.sh"
+	chmod +x "${_bindir}/post_install.sh"
+	chmod +x "${_bindir}/chrooted_post_install.sh"
+	chmod +x "${_bindir}/archon-hooks-runner"
+}

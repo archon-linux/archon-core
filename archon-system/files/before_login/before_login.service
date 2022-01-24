@@ -1,0 +1,12 @@
+[Unit]
+Description=Run before live boot login to finalize the setup.
+After=rc-local.service
+Before=getty.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+ExecStart=/usr/bin/before_login.sh
+
+[Install]
+WantedBy=multi-user.target

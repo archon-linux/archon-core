@@ -1,0 +1,31 @@
+# Maintainer: Nek <@nekwebdev>
+
+pkgname=archon-wallpapers
+pkgver=1.0
+pkgrel=1
+pkgdesc='Archon Linux wallpapers'
+url="https://github.com/archon-linux/archon-themes"
+arch=('any')
+license=('GPL3')
+depends=()
+
+prepare() {
+	cp -af ../files/. $srcdir
+}
+
+package() {	
+	local _sharedir="${pkgdir}/etc/skel/.local/share"
+	local _bgdir="${pkgdir}/usr/share/backgrounds"
+
+	mkdir -p "$_sharedir"
+	mkdir -p "${_bgdir}/lightdm"
+
+	cp -r "${srcdir}/backgrounds" "${_sharedir}/backgrounds"
+	cp "${srcdir}/.fehbg" "${pkgdir}/etc/skel/.fehbg"
+
+	cp -r "${srcdir}/backgrounds/gruvbox_astronaut.jpg" "${_bgdir}/archon_default.jpg"
+	cp -r "${srcdir}/backgrounds/gruvbox_astronaut.jpg" "${_bgdir}/lightdm/wallpaper.jpg"
+
+	chmod 666 "${_bgdir}/lightdm/wallpaper.jpg"
+	chmod +x "${pkgdir}/etc/skel/.fehbg"
+}

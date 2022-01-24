@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+# archon-system
+# https://github.com/archon-linux/archon-core
+# @nekwebdev
+# LICENSE: GPLv3
+# Original:
+# Copyright (C) 2020-2021 Aditya Shakya <adi1090x@gmail.com>
+# Everyone is permitted to copy and distribute copies of this file under GNU-GPL3
+
+_notify_reboot_required() {
+    local xx
+
+    for xx in "$DESKTOP_SESSION" "$XDG_CURRENT_DESKTOP" ; do
+        if [[ -n "$xx" ]] ; then
+            break
+        fi
+    done
+
+    if [[ -n "$xx" ]] ; then
+        local user userid cmd
+
+        for user in $(/usr/bin/users) ; do
+            userid=$(/usr/bin/id -u "$user")
+            cmd=(DISPLAY=:0 DBUS_SESSION_ADDRESS=unix:path=/run/user/"$userid"/bus /usr/bin/notify-send)
+            cmd+=(--icon=system-reboot --urgency=critical)
+            cmd+=("\"Core system package upgraded, You need to reboot the machine.\"")
+            /usr/bin/su "$user" -c "${cmd[*]}"
+        done
+    else
+        # at TTY
+        echo "Core system package upgraded, You need to reboot the machine." >&2
+    fi
+}
+
+_RunningKernel() {
+    cat /proc/cmdline | sed 's|.*/vmlinuz-\(linux[a-z0-9-]*\) .*|\1|'
+}
+
+fix_lsb_release() {
+    local file=/etc/lsb-release
+
+    if [[ -z "`grep "^DISTRIB_RELEASE=" $file`" ]] ; then
+        # add missing DISTRIB_RELEASE=
+        echo "DISTRIB_RELEASE=rolling" >> "$file"
+    fi
+    sed -i "$file" \
+        -e 's|^DISTRIB_ID=.*$|DISTRIB_ID=archon|' \
+        -e 's|^DISTRIB_RELEASE=.*$|DISTRIB_RELEASE=rolling|' \
+        -e 's|^DISTRIB_DESCRIPTION=.*$|DISTRIB_DESCRIPTION=\"Archon Linux\"|'
+}
+
+fix_os_release() {
+    local file=/usr/lib/os-release
+
+    sed -i "$file" \
+        -e 's|^NAME=.*$|NAME=\"Archon Linux\"|' \
+        -e 's|^PRETTY_NAME=.*$|PRETTY_NAME=\"Archon Linux\"|' \
+        -e 's|^ID=.*$|ID=archon|' \
+        -e 's|^ID_LIKE=.*$|ID_LIKE=arch|' \
+        -e 's|^BUILD_ID=.*$|BUILD_ID=rolling|' \
+        -e 's|^HOME_URL=.*$|HOME_URL=\"https://github.com/archon-linux\"|' \
+        -e 's|^DOCUMENTATION_URL=.*$|DOCUMENTATION_URL=\"https://github.com/archon-linux\"|' \
+        -e 's|^SUPPORT_URL=.*$|SUPPORT_URL=\"https://github.com/archon-linux\"|' \
+        -e 's|^BUG_REPORT_URL=.*$|BUG_REPORT_URL=\"https://github.com/archon-linux/archon-iso/issues\"|' \
+        -e 's|^LOGO=.*$|LOGO=arch|'
+
+    if [ -z "$(grep "^ID_LIKE=" $file)" ] && [ -n "$(grep "^ID=" $file)" ] ; then
+        # add missing ID_LIKE=
+        sed -i $file -e '/^ID=/a \ID_LIKE=arch'
+    fi
+
+	# fix issue file
+    sed -i 's|Arch Linux|Archon Linux|g' /etc/issue /usr/share/factory/etc/issue
+}
+
+fix_grub() {
+	## Fix GRUB_DISTRIBUTOR for Archon
+	sed -i -e 's/GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR="Archon"/g' /etc/default/grub
+	sed -i -e 's/GRUB_GFXMODE=.*/GRUB_GFXMODE=1920x1080,auto/g' /etc/default/grub
+	sed -i -e 's/GRUB_THEME=.*/GRUB_THEME="/usr/share/grub/themes/archon/theme.txt"/g' /etc/default/grub
+}
+
+require_reboot() {
+    local targets=$(tee /dev/null)  # targets from the hook (stdin)
+    local target
+    local notify=no
+    local runningKernel="$(_RunningKernel)"
+
+    for target in $targets ; do
+        case "$target" in
+            linux | linux-lts | linux-zen | linux-hardened | linux-lts?? | linux-lts???)
+                # Note: only official and older LTS kernels are checked.
+                if [[ "$target" = "$runningKernel" ]] ; then
+                    notify=yes
+                    break
+                fi
+                ;;
+            nvidia)
+                if [[ "$runningKernel" = "linux" ]] ; then
+                    notify=yes
+                    break
+                fi
+                ;;
+            nvidia-lts)
+                if [[ "$runningKernel" = "linux-lts" ]] ; then
+                    notify=yes
+                    break
+                fi
+                ;;
+            btrfs-progs)
+                if [[ -n "$(/usr/bin/df -hT | awk '{print $2}' | grep -w btrfs)" ]] ; then
+                    notify=yes
+                    break
+                fi
+                ;;
+            *)
+                notify=yes
+                break
+                ;;
+        esac
+    done
+
+    if [[ "$notify" = "yes" ]] ; then
+		_notify_reboot_required
+		unset -f _notify_reboot_required
+    fi
+}
+
+main()
+{
+    local hookname="$1"
+
+    case "$hookname" in
+        os-release)     fix_os_release ;;
+        lsb-release)    fix_lsb_release ;;
+        fix-grub)       fix_grub ;;
+        require-reboot) require_reboot ;;
+        "")             fix_os_release
+                        fix_lsb_release
+                        fix_grub
+                        require_reboot
+                        ;;
+    esac
+}
+
+main "$@"

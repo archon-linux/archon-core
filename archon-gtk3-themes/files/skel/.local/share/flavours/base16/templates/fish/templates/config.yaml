@@ -1,0 +1,3 @@
+default:
+    extension: none
+    output: colors

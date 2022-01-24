@@ -1,0 +1,3 @@
+default:
+    extension: -themerc
+    output: openbox-3

@@ -1,0 +1,11 @@
+default:
+    extension: .json
+    output: build_schemes 
+
+colors:
+    extension: colors
+    output: build_schemes
+
+tty:
+    extension: .sh
+    output: build_schemes 

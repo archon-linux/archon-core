@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# calamares
+# https://github.com/archon-linux/archon-core
+# @nekwebdev
+# LICENSE: GPLv3
+
+cd "$(dirname "$0")" || exit 1
 DIR="$(pwd)"
 PKGDIR="../packages"
 RRDIR='../../archon-repo/x86_64'
@@ -8,7 +14,7 @@ fi
 echo -e "Building Package..."
 updpkgsums && makepkg -s && mv ./*.pkg.tar.zst "$PKGDIR"
 
-rm -rf src pkg
+rm -rf src pkg calamares-*
 
 cd "$DIR" || exit 1
 

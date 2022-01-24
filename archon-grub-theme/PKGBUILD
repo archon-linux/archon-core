@@ -1,0 +1,21 @@
+# Maintainer: Nek <@nekwebdev>
+
+pkgname=archon-grub-theme
+pkgver=1.0
+pkgrel=1
+pkgdesc='Archon Linux grub theme files'
+url="https://github.com/archon-linux/archon-themes"
+arch=('any')
+license=('GPL3')
+depends=()
+
+prepare() {
+	cp -af ../files/. "$srcdir"
+}
+
+package() {	
+	local _themesdir="${pkgdir}/usr/share/grub/themes"
+	mkdir -p "$_themesdir"
+
+	cp -r "${srcdir}/archon" "${_themesdir}/archon"
+}
