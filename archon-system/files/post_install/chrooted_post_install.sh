@@ -407,9 +407,9 @@ function misc_actions() {
 	echo "Enable autostart of archon ansible"
 	# Enable autostart of archon ansible
 	mkdir -p /etc/skel/.config/autostart
-	mv /etc/skel/.local/share/applications/archon.desktop /etc/skel/.config/autostart/archon.desktop
+	cp /etc/skel/.local/share/applications/archon.desktop /etc/skel/.config/autostart/archon.desktop
 	mkdir -p /home/"$new_user"/.config/autostart
-	mv /home/"$new_user"/.local/share/applications/archon.desktop /home/"$new_user"/.config/autostart/archon.desktop
+	cp /home/"$new_user"/.local/share/applications/archon.desktop /home/"$new_user"/.config/autostart/archon.desktop
 	chown -R "$new_user":"$new_user" /home/"$new_user"/.config/autostart
 
 	echo "+---------------------->>"
