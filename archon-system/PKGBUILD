@@ -2,7 +2,7 @@
 
 pkgname=archon-system
 pkgver=1.0
-pkgrel=2
+pkgrel=3
 pkgdesc='Archon Linux system related configuration files'
 url="https://github.com/archon-linux/archon-core"
 arch=('any')

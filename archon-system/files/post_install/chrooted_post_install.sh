@@ -429,6 +429,7 @@ function misc_actions() {
 	echo "+---------------------->>"
 	echo "[*] Using all cores when compressing packages with pacman..."
 	set_config "/etc/makepkg.conf" COMPRESSXZ "(xz -c -z - --threads=0)"
+	sed -i "s/-j2/-j$(nproc)/;s/^#MAKEFLAGS/MAKEFLAGS/" /etc/makepkg.conf
 
 	echo "+---------------------->>"
 	echo "[*] Removing journald volatile storage..."
